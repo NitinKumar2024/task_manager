@@ -10,9 +10,9 @@ class GeminiClient {
     private string $model;
     private const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
-    public function __construct(string $apiKey, string $model = 'gemini-2.5-flash') {
+    public function __construct(string $apiKey, string $model = 'gemini-3.8-flash') {
         $this->apiKey = trim($apiKey);
-        $this->model = !empty($model) ? trim($model) : 'gemini-2.5-flash';
+        $this->model = !empty($model) ? trim($model) : 'gemini-3.8-flash';
     }
 
     /**
