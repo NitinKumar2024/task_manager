@@ -27,7 +27,7 @@ Designed specifically for focus, privacy, and tracking everything seamlessly.
   - Open the slide-out Copilot drawer anytime. Chat with your personal Chief of Staff who has live context of all your pending tasks, deadlines, and progress.
 - **💎 Task Enhancer / Polisher**:
   - Click **AI Polish** inside any task to rewrite rough thoughts into crisp, outcome-oriented goals with a Definition of Done checklist.
-- **Model Flexibility**: Supports `gemini-2.5-flash` (recommended for speed and accuracy), `gemini-1.5-flash`, and `gemini-1.5-pro`.
+- **Model Flexibility**: Supports `gemini-3.8-flash` (recommended for speed and accuracy), `gemini-3.8-pro`, and `gemini-1.5-flash`.
 
 ### 📊 3. Flexible Multi-View Organization
 - **📋 Kanban Board**: Visual columns for *Inbox / To Do*, *In Progress*, *Review / Blocked*, and *Completed* with drag-and-drop.

@@ -162,7 +162,7 @@ function initDbSchema(PDO $db): void {
     $defaultSettings = [
         'app_title' => 'NexusAI Task Master',
         'user_name' => 'Me',
-        'gemini_model' => 'gemini-2.5-flash',
+        'gemini_model' => 'gemini-3.8-flash',
         'theme' => 'dark',
         'daily_goal_minutes' => '240',
         'timezone' => 'Asia/Kolkata'
@@ -175,6 +175,9 @@ function initDbSchema(PDO $db): void {
             $insertSetting->execute([$key, $val]);
         }
     }
+
+    // Auto-migrate deprecated gemini-2.5-flash to gemini-3.8-flash
+    $db->exec("UPDATE settings SET value = 'gemini-3.8-flash' WHERE key = 'gemini_model' AND value = 'gemini-2.5-flash'");
 }
 
 // Activity logging helper

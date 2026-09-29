@@ -52,9 +52,13 @@ class GeminiClient {
             $payload['generationConfig']['responseMimeType'] = 'application/json';
         }
 
-        // Try primary model, fallback if model not found
-        $modelsToTry = [$this->model];
-        if (!in_array('gemini-2.5-flash', $modelsToTry)) $modelsToTry[] = 'gemini-2.5-flash';
+        // Try primary model, fallback if model not found or deprecated
+        $modelsToTry = [];
+        // If current model is deprecated gemini-2.5-flash, prefer gemini-3.8-flash
+        $primary = ($this->model === 'gemini-2.5-flash') ? 'gemini-3.8-flash' : $this->model;
+        $modelsToTry[] = $primary;
+        if (!in_array('gemini-3.8-flash', $modelsToTry)) $modelsToTry[] = 'gemini-3.8-flash';
+        if (!in_array('gemini-3.8-pro', $modelsToTry)) $modelsToTry[] = 'gemini-3.8-pro';
         if (!in_array('gemini-1.5-flash', $modelsToTry)) $modelsToTry[] = 'gemini-1.5-flash';
 
         $lastError = '';
@@ -64,8 +68,12 @@ class GeminiClient {
                 return $response;
             } catch (Exception $e) {
                 $lastError = $e->getMessage();
-                // If it's not a model error, don't keep cycling
-                if (!str_contains($lastError, '404') && !str_contains($lastError, 'not found')) {
+                // If it's not a model error or deprecated error, don't keep cycling
+                $isModelError = str_contains($lastError, '404') || 
+                                str_contains($lastError, 'not found') || 
+                                str_contains($lastError, 'no longer available') ||
+                                str_contains($lastError, 'not supported');
+                if (!$isModelError) {
                     throw $e;
                 }
             }

@@ -10,7 +10,7 @@ $db = getDb();
 $isConfigured = isAppConfigured($db);
 $isAuth = isAuthenticated();
 $appTitle = getSetting($db, 'app_title', 'NexusAI Task Master');
-$geminiModel = getSetting($db, 'gemini_model', 'gemini-2.5-flash');
+$geminiModel = ($m = getSetting($db, 'gemini_model', 'gemini-3.8-flash')) === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : $m;
 ?>
 <!DOCTYPE html>
 <html lang="en" class="dark">
@@ -684,9 +684,9 @@ $geminiModel = getSetting($db, 'gemini_model', 'gemini-2.5-flash');
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Preferred Model</label>
                         <select id="settings-gemini-model" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none">
-                            <option value="gemini-2.5-flash">gemini-2.5-flash (Fastest & Recommended)</option>
-                            <option value="gemini-1.5-flash">gemini-1.5-flash (Reliable Standard)</option>
-                            <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning)</option>
+                            <option value="gemini-3.8-flash">gemini-3.8-flash (Latest & Recommended)</option>
+                            <option value="gemini-3.8-pro">gemini-3.8-pro (High Reasoning)</option>
+                            <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Fallback)</option>
                         </select>
                     </div>
                 </div>

@@ -227,7 +227,7 @@ const App = {
             if (data.success) {
                 App.state.settings = data.settings;
                 document.getElementById('header-app-title').textContent = data.settings.app_title || 'NexusAI Task Master';
-                document.getElementById('header-model-badge').textContent = data.settings.gemini_model || 'gemini-2.5-flash';
+                document.getElementById('header-model-badge').textContent = data.settings.gemini_model || 'gemini-3.8-flash';
             }
         } catch (e) {
             console.error(e);
@@ -840,7 +840,7 @@ const App = {
         document.getElementById('settings-app-title').value = s.app_title || '';
         document.getElementById('settings-gemini-key').value = '';
         document.getElementById('settings-gemini-key').placeholder = s.has_gemini_key ? `Configured (${s.masked_gemini_key}) - leave blank to keep` : 'Paste Gemini API key here';
-        document.getElementById('settings-gemini-model').value = s.gemini_model || 'gemini-2.5-flash';
+        document.getElementById('settings-gemini-model').value = s.gemini_model || 'gemini-3.8-flash';
 
         modal.classList.remove('hidden');
         lucide.createIcons();

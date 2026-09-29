@@ -29,7 +29,7 @@ switch ($action) {
             'settings' => [
                 'app_title' => getSetting($db, 'app_title', 'NexusAI Task Master'),
                 'user_name' => getSetting($db, 'user_name', 'Me'),
-                'gemini_model' => getSetting($db, 'gemini_model', 'gemini-2.5-flash'),
+                'gemini_model' => ($curModel = getSetting($db, 'gemini_model', 'gemini-3.8-flash')) === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : $curModel,
                 'has_gemini_key' => !empty($apiKey),
                 'masked_gemini_key' => $maskedKey,
                 'theme' => getSetting($db, 'theme', 'dark'),

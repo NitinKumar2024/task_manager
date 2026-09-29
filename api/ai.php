@@ -19,7 +19,10 @@ if (empty($action)) {
 
 // Retrieve Gemini settings
 $apiKey = getSetting($db, 'gemini_api_key', '');
-$model = getSetting($db, 'gemini_model', 'gemini-2.5-flash');
+$model = getSetting($db, 'gemini_model', 'gemini-3.8-flash');
+if ($model === 'gemini-2.5-flash') {
+    $model = 'gemini-3.8-flash';
+}
 $userName = getSetting($db, 'user_name', 'Me');
 
 // Helper to get client or error
