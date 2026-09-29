@@ -54,12 +54,24 @@ class GeminiClient {
 
         // Try primary model, fallback if model not found or deprecated
         $modelsToTry = [];
-        // If current model is deprecated gemini-2.5-flash, prefer gemini-3.8-flash
-        $primary = ($this->model === 'gemini-2.5-flash') ? 'gemini-3.8-flash' : $this->model;
-        $modelsToTry[] = $primary;
-        if (!in_array('gemini-3.8-flash', $modelsToTry)) $modelsToTry[] = 'gemini-3.8-flash';
-        if (!in_array('gemini-3.8-pro', $modelsToTry)) $modelsToTry[] = 'gemini-3.8-pro';
-        if (!in_array('gemini-1.5-flash', $modelsToTry)) $modelsToTry[] = 'gemini-1.5-flash';
+        $cleanPrimary = ltrim(trim($this->model), '/');
+        if (str_starts_with($cleanPrimary, 'models/')) {
+            $cleanPrimary = substr($cleanPrimary, 7);
+        }
+        if ($cleanPrimary === 'gemini-2.5-flash') {
+            $cleanPrimary = 'gemini-3.8-flash';
+        }
+        if (!empty($cleanPrimary)) {
+            $modelsToTry[] = $cleanPrimary;
+        }
+
+        // Specifically prioritized fallbacks: gemini-3.5-flash-lite first, then gemini-3.8-flash, etc.
+        $fallbacks = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.8-pro', 'gemini-1.5-flash'];
+        foreach ($fallbacks as $fb) {
+            if (!in_array($fb, $modelsToTry)) {
+                $modelsToTry[] = $fb;
+            }
+        }
 
         $lastError = '';
         foreach ($modelsToTry as $currentModel) {
@@ -83,7 +95,11 @@ class GeminiClient {
     }
 
     private function executeCurl(string $model, array $payload): array {
-        $url = self::BASE_URL . rawurlencode($model) . ':generateContent?key=' . rawurlencode($this->apiKey);
+        $cleanModel = ltrim(trim($model), '/');
+        if (str_starts_with($cleanModel, 'models/')) {
+            $cleanModel = substr($cleanModel, 7);
+        }
+        $url = self::BASE_URL . rawurlencode($cleanModel) . ':generateContent?key=' . rawurlencode($this->apiKey);
 
         $ch = curl_init($url);
         $jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

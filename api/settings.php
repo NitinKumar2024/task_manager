@@ -24,12 +24,27 @@ switch ($action) {
             $maskedKey = substr($apiKey, 0, 4) . '...' . substr($apiKey, -4);
         }
 
+        $availJson = getSetting($db, 'available_models', '');
+        $availableModels = !empty($availJson) ? json_decode($availJson, true) : null;
+        if (!is_array($availableModels) || empty($availableModels)) {
+            $availableModels = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-pro', 'gemini-1.5-flash'];
+        }
+
+        $activeModel = getSetting($db, 'gemini_model', 'gemini-3.8-flash');
+        if ($activeModel === 'gemini-2.5-flash') {
+            $activeModel = 'gemini-3.8-flash';
+        }
+        if (!in_array($activeModel, $availableModels)) {
+            array_unshift($availableModels, $activeModel);
+        }
+
         jsonResponse([
             'success' => true,
             'settings' => [
                 'app_title' => getSetting($db, 'app_title', 'NexusAI Task Master'),
                 'user_name' => getSetting($db, 'user_name', 'Me'),
-                'gemini_model' => ($curModel = getSetting($db, 'gemini_model', 'gemini-3.8-flash')) === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : $curModel,
+                'gemini_model' => $activeModel,
+                'available_models' => array_values(array_unique($availableModels)),
                 'has_gemini_key' => !empty($apiKey),
                 'masked_gemini_key' => $maskedKey,
                 'theme' => getSetting($db, 'theme', 'dark'),
@@ -51,7 +66,20 @@ switch ($action) {
             setSetting($db, 'gemini_api_key', trim($input['gemini_api_key']));
         }
         if (isset($input['gemini_model'])) {
-            setSetting($db, 'gemini_model', trim($input['gemini_model']));
+            $modelName = ltrim(trim($input['gemini_model']), '/');
+            if (str_starts_with($modelName, 'models/')) {
+                $modelName = substr($modelName, 7);
+            }
+            if (!empty($modelName)) {
+                setSetting($db, 'gemini_model', $modelName);
+
+                // Add to available_models
+                $avail = json_decode(getSetting($db, 'available_models', '[]'), true) ?: ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-pro', 'gemini-1.5-flash'];
+                if (!in_array($modelName, $avail)) {
+                    array_unshift($avail, $modelName);
+                    setSetting($db, 'available_models', json_encode(array_values(array_unique($avail))));
+                }
+            }
         }
         if (isset($input['theme'])) {
             setSetting($db, 'theme', trim($input['theme']));
@@ -65,6 +93,57 @@ switch ($action) {
         jsonResponse([
             'success' => true,
             'message' => 'Settings saved successfully'
+        ]);
+        break;
+
+    case 'add_model':
+        $newModel = ltrim(trim($input['model'] ?? ''), '/');
+        if (str_starts_with($newModel, 'models/')) {
+            $newModel = substr($newModel, 7);
+        }
+
+        if (empty($newModel)) {
+            jsonResponse(['success' => false, 'message' => 'Model name cannot be empty'], 400);
+        }
+
+        $avail = json_decode(getSetting($db, 'available_models', '[]'), true) ?: ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-pro', 'gemini-1.5-flash'];
+        if (!in_array($newModel, $avail)) {
+            array_unshift($avail, $newModel);
+        }
+        setSetting($db, 'available_models', json_encode(array_values(array_unique($avail))));
+        setSetting($db, 'gemini_model', $newModel);
+
+        logActivity($db, null, 'model_added', "Added and activated custom model: {$newModel}");
+
+        jsonResponse([
+            'success' => true,
+            'message' => "Model '{$newModel}' added and set as active!",
+            'model' => $newModel,
+            'available_models' => array_values(array_unique($avail))
+        ]);
+        break;
+
+    case 'delete_model':
+        $delModel = trim($input['model'] ?? '');
+        $avail = json_decode(getSetting($db, 'available_models', '[]'), true) ?: ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-pro', 'gemini-1.5-flash'];
+        $avail = array_values(array_filter($avail, fn($m) => $m !== $delModel));
+
+        if (empty($avail)) {
+            $avail = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+        }
+
+        setSetting($db, 'available_models', json_encode($avail));
+
+        $curActive = getSetting($db, 'gemini_model', 'gemini-3.8-flash');
+        if ($curActive === $delModel) {
+            setSetting($db, 'gemini_model', $avail[0]);
+        }
+
+        jsonResponse([
+            'success' => true,
+            'message' => "Model '{$delModel}' removed",
+            'active_model' => getSetting($db, 'gemini_model', 'gemini-3.8-flash'),
+            'available_models' => $avail
         ]);
         break;
 

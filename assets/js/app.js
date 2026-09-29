@@ -840,17 +840,120 @@ const App = {
         document.getElementById('settings-app-title').value = s.app_title || '';
         document.getElementById('settings-gemini-key').value = '';
         document.getElementById('settings-gemini-key').placeholder = s.has_gemini_key ? `Configured (${s.masked_gemini_key}) - leave blank to keep` : 'Paste Gemini API key here';
-        document.getElementById('settings-gemini-model').value = s.gemini_model || 'gemini-3.8-flash';
+
+        // Populate models dropdown
+        App.populateModelDropdown(s.available_models || [], s.gemini_model || 'gemini-3.8-flash');
+        App.toggleCustomModelInput(false);
 
         modal.classList.remove('hidden');
         lucide.createIcons();
+    },
+
+    populateModelDropdown(models, activeModel) {
+        const select = document.getElementById('settings-gemini-model');
+        if (!select) return;
+
+        // Default list if none
+        if (!models || models.length === 0) {
+            models = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-pro', 'gemini-1.5-flash'];
+        }
+
+        if (activeModel && !models.includes(activeModel)) {
+            models.unshift(activeModel);
+        }
+
+        let html = '';
+        models.forEach(m => {
+            const isSelected = m === activeModel ? 'selected' : '';
+            let label = m;
+            if (m === 'gemini-3.8-flash') label = `${m} (Latest & Recommended)`;
+            else if (m === 'gemini-3.5-flash-lite') label = `${m} (Fast Fallback)`;
+            else if (m === 'gemini-3.8-pro') label = `${m} (Deep Reasoning)`;
+            else if (m === 'gemini-1.5-flash') label = `${m} (Standard)`;
+            else label = `Custom: ${m}`;
+
+            html += `<option value="${escapeHtml(m)}" ${isSelected}>${label}</option>`;
+        });
+
+        html += `<option value="__custom__">➕ Enter Custom Model...</option>`;
+        select.innerHTML = html;
+    },
+
+    onModelSelectChange(val) {
+        if (val === '__custom__') {
+            App.toggleCustomModelInput(true);
+        } else {
+            App.toggleCustomModelInput(false);
+            document.getElementById('header-model-badge').textContent = val;
+        }
+    },
+
+    toggleCustomModelInput(show = null) {
+        const box = document.getElementById('custom-model-box');
+        if (!box) return;
+        const shouldShow = (show !== null) ? show : box.classList.contains('hidden');
+        if (shouldShow) {
+            box.classList.remove('hidden');
+            const input = document.getElementById('custom-model-input');
+            if (input) input.focus();
+        } else {
+            box.classList.add('hidden');
+            // If select was on __custom__, revert to active model
+            const select = document.getElementById('settings-gemini-model');
+            if (select && select.value === '__custom__') {
+                select.value = App.state.settings.gemini_model || 'gemini-3.8-flash';
+            }
+        }
+    },
+
+    async addCustomModel() {
+        const input = document.getElementById('custom-model-input');
+        let newModel = input ? input.value.trim() : '';
+
+        if (!newModel) {
+            App.showToast('Please type a model name', 'warning');
+            return;
+        }
+
+        // Clean model name
+        if (newModel.startsWith('models/')) {
+            newModel = newModel.substring(7);
+        }
+
+        try {
+            const res = await fetch('api/settings.php?action=add_model', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: newModel })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+
+            input.value = '';
+            App.toggleCustomModelInput(false);
+            App.state.settings.gemini_model = data.model;
+            App.state.settings.available_models = data.available_models;
+
+            App.populateModelDropdown(data.available_models, data.model);
+            document.getElementById('header-model-badge').textContent = data.model;
+
+            App.showToast(`✨ Model "${data.model}" added and activated!`, 'success');
+        } catch (err) {
+            App.showToast(err.message, 'error');
+        }
     },
 
     async saveSettings() {
         const name = document.getElementById('settings-name').value.trim();
         const appTitle = document.getElementById('settings-app-title').value.trim();
         const key = document.getElementById('settings-gemini-key').value.trim();
-        const model = document.getElementById('settings-gemini-model').value;
+        let model = document.getElementById('settings-gemini-model').value;
+
+        if (model === '__custom__') {
+            const customInput = document.getElementById('custom-model-input').value.trim();
+            if (customInput) model = customInput;
+            else model = 'gemini-3.8-flash';
+        }
 
         const payload = {
             user_name: name,
@@ -880,7 +983,12 @@ const App = {
     async testGeminiInSettings() {
         const btn = document.getElementById('test-key-btn');
         const key = document.getElementById('settings-gemini-key').value.trim();
-        const model = document.getElementById('settings-gemini-model').value;
+        let model = document.getElementById('settings-gemini-model').value;
+
+        if (model === '__custom__') {
+            const customInput = document.getElementById('custom-model-input').value.trim();
+            if (customInput) model = customInput;
+        }
 
         const origHtml = btn.innerHTML;
         btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Testing...`;

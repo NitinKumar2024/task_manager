@@ -310,11 +310,13 @@ $geminiModel = ($m = getSetting($db, 'gemini_model', 'gemini-3.8-flash')) === 'g
                         <span>New Task</span>
                     </button>
 
-                    <!-- Active Model Pill -->
-                    <div class="hidden lg:flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800">
+                    <!-- Active Model Pill (Click to switch/add model) -->
+                    <button onclick="App.openSettingsModal()" title="Active Gemini model. Click to switch or add any model."
+                            class="hidden lg:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 hover:border-indigo-500/80 text-slate-300 border border-slate-800 transition cursor-pointer">
                         <i data-lucide="cpu" class="w-3 h-3 text-indigo-400"></i>
                         <span id="header-model-badge"><?= htmlspecialchars($geminiModel) ?></span>
-                    </div>
+                        <i data-lucide="chevron-down" class="w-2.5 h-2.5 text-slate-500"></i>
+                    </button>
                 </div>
             </header>
 
@@ -681,13 +683,50 @@ $geminiModel = ($m = getSetting($db, 'gemini_model', 'gemini-3.8-flash')) === 'g
                             </button>
                         </div>
                     </div>
+                    <!-- Active Model Selector & Custom Model Addition -->
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Preferred Model</label>
-                        <select id="settings-gemini-model" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none">
-                            <option value="gemini-3.8-flash">gemini-3.8-flash (Latest & Recommended)</option>
-                            <option value="gemini-3.8-pro">gemini-3.8-pro (High Reasoning)</option>
-                            <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Fallback)</option>
-                        </select>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-xs text-slate-400 font-medium">Active AI Model</label>
+                            <span class="text-[10px] text-slate-500 flex items-center gap-1" title="If primary model fails, requests automatically fall back to gemini-3.5-flash-lite">
+                                <i data-lucide="shield-check" class="w-3 h-3 text-emerald-400"></i> Fallback: gemini-3.5-flash-lite
+                            </span>
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="settings-gemini-model" onchange="App.onModelSelectChange(this.value)"
+                                    class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                <!-- Populated dynamically from available_models -->
+                            </select>
+                            <button type="button" onclick="App.toggleCustomModelInput()"
+                                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 border border-slate-700 rounded-xl text-xs font-medium transition flex items-center gap-1 shrink-0">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                <span>Add Any Model</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Model Input Drawer -->
+                    <div id="custom-model-box" class="hidden p-3.5 rounded-xl bg-slate-950 border border-indigo-500/40 space-y-2.5 transition animate-fade-in">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-indigo-300 flex items-center gap-1.5">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i> Add Any Custom Gemini Model
+                            </span>
+                            <button type="button" onclick="App.toggleCustomModelInput(false)" class="text-slate-500 hover:text-slate-300 p-0.5">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">
+                            Type any Gemini model ID (e.g. <span class="text-indigo-300 font-mono">gemini-3.5-flash-lite</span>, <span class="text-indigo-300 font-mono">gemini-3.8-flash</span>, <span class="text-indigo-300 font-mono">gemini-3.8-pro</span>, experimental, or tuned models).
+                        </p>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-model-input" placeholder="e.g. gemini-3.5-flash-lite or custom model..."
+                                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); App.addCustomModel(); }"
+                                   class="flex-1 bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 outline-none">
+                            <button type="button" onclick="App.addCustomModel()"
+                                    class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition shrink-0 flex items-center gap-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                <span>Add & Activate</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

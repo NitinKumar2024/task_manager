@@ -27,7 +27,10 @@ Designed specifically for focus, privacy, and tracking everything seamlessly.
   - Open the slide-out Copilot drawer anytime. Chat with your personal Chief of Staff who has live context of all your pending tasks, deadlines, and progress.
 - **💎 Task Enhancer / Polisher**:
   - Click **AI Polish** inside any task to rewrite rough thoughts into crisp, outcome-oriented goals with a Definition of Done checklist.
-- **Model Flexibility**: Supports `gemini-3.8-flash` (recommended for speed and accuracy), `gemini-3.8-pro`, and `gemini-1.5-flash`.
+- **Model Flexibility & Custom Models**:
+  - Primary model: `gemini-3.8-flash`
+  - Automated fallback: **`gemini-3.5-flash-lite`** (ultra-fast, reliable backup if primary model is unavailable or rate-limited)
+  - **Add Any Model Directly In-App**: You can type and activate ANY custom, experimental, or fine-tuned Gemini model (e.g. `gemini-3.5-flash-lite`, `gemini-3.8-pro`, `gemini-exp-1206`, etc.) right from **Settings** &rarr; **Add Any Model**, and click **Test Model** to verify it instantly!
 
 ### 📊 3. Flexible Multi-View Organization
 - **📋 Kanban Board**: Visual columns for *Inbox / To Do*, *In Progress*, *Review / Blocked*, and *Completed* with drag-and-drop.
